@@ -44,3 +44,37 @@ export const registrations: Registration[] = [
 export function getRegistrationsForStudent(studentId: string): Registration[] {
   return registrations.filter((reg) => reg.studentId === studentId)
 }
+
+/**
+ * Only 'confirmed' registrations count toward occupancy/duplicate checks.
+ * A 'cancelled' one must never block a re-registration or count as an
+ * active seat.
+ */
+export function getConfirmedRegistrationsForEvent(
+  eventId: string,
+): Registration[] {
+  return registrations.filter(
+    (reg) => reg.eventId === eventId && reg.status === 'confirmed',
+  )
+}
+
+export function hasConfirmedRegistration(
+  eventId: string,
+  studentId: string,
+): boolean {
+  return registrations.some(
+    (reg) =>
+      reg.eventId === eventId &&
+      reg.studentId === studentId &&
+      reg.status === 'confirmed',
+  )
+}
+
+/** Generates a fresh, collision-free registration id. */
+export function generateRegistrationId(): string {
+  let n = registrations.length + 1
+  while (registrations.some((r) => r.id === `reg-${String(n).padStart(2, '0')}`)) {
+    n += 1
+  }
+  return `reg-${String(n).padStart(2, '0')}`
+}

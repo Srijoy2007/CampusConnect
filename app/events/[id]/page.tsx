@@ -1,7 +1,10 @@
 import Link from 'next/link'
 import { getEventById, isPastEvent, isFullEvent } from '@/data/events'
+import { getConfirmedRegistrationsForEvent } from '@/data/registrations'
 import StatusBadge from '@/components/StatusBadge'
 import EmptyState from '@/components/EmptyState'
+import RegisterPanel from '@/components/RegisterPanel'
+
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-IN', {
@@ -51,8 +54,9 @@ export default function EventDetailPage({
       : full
         ? 'full'
         : 'open'
-  const canRegister = !past && !full && !event.cancelled
-
+    const confirmedStudentIds = getConfirmedRegistrationsForEvent(event.id).map(
+        (reg) => reg.studentId,
+    )
   return (
     <section className="shell" style={{ padding: '40px 0 64px' }}>
       <Link
@@ -101,18 +105,14 @@ export default function EventDetailPage({
               POST /api/registrations route, and make sure it respects
               login state, duplicate registrations, full events, and
               past/cancelled events. */}
-          <button
-            className="btn btn-primary"
-            disabled={!canRegister}
-            style={{ marginTop: 4 }}
-            title="Registration isn't wired up yet — that's Task 2"
-          >
-            {canRegister
-              ? 'Register'
-              : status === 'full'
-                ? 'Event full'
-                : 'Registration closed'}
-          </button>
+                
+            <RegisterPanel
+             eventId={event.id}
+             past={past}
+             full={full}
+             cancelled={event.cancelled}
+             confirmedStudentIds={confirmedStudentIds}
+            />
         </aside>
       </div>
     </section>
