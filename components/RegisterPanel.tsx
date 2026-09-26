@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAuth } from './AuthProvider'
 import { registerForEvent } from '@/app/actions'
 
@@ -18,10 +19,11 @@ export default function RegisterPanel({
   confirmedStudentIds: string[]
 }) {
   const { currentUser } = useAuth()
+  const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [message, setMessage] = useState <
     { type: 'success' | 'error'; text: string } | null
- >(null)
+  >(null)
 
   const isStudent = currentUser.role === 'student'
   const alreadyRegistered =
@@ -35,6 +37,7 @@ export default function RegisterPanel({
       const result = await registerForEvent(eventId, currentUser.id)
       if (result.ok) {
         setMessage({ type: 'success', text: "You're registered! Check My Registrations." })
+        router.refresh()
       } else {
         setMessage({ type: 'error', text: result.error })
       }
