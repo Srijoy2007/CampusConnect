@@ -1,8 +1,15 @@
 'use client'
 
-import { useState } from 'react'
-import { events, EventCategory } from '@/data/events'
+import { useMemo, useState } from 'react'
+import {
+  events,
+  EventCategory,
+  isPastEvent,
+  searchEventsByName,
+  filterEventsByCategory,
+} from '@/data/events'
 import EventCard from '@/components/EventCard'
+import EmptyState from '@/components/EmptyState'
 
 const CATEGORIES: (EventCategory | 'All')[] = [
   'All',
@@ -15,14 +22,18 @@ const CATEGORIES: (EventCategory | 'All')[] = [
 ]
 
 export default function EventsPage() {
-  // PARTICIPANT TASK (Task 1): these two pieces of state exist so the
-  // search box and category dropdown below are usable, but right now
-  // nothing actually reads them — the grid below always renders every
-  // event in `events`. Wire this up to `searchEventsByName` and
-  // `filterEventsByCategory` from data/events.ts, and make the two
-  // compose together.
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState<EventCategory | 'All'>('All')
+
+  const results = useMemo(() => {
+    const upcoming = events
+      .filter((e) => !isPastEvent(e) && !e.cancelled)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    const byName = searchEventsByName(upcoming, query)
+    return filterEventsByCategory(byName, category)
+  }, [query, category])
+
+  const hasActiveFilters = query.trim() !== '' || category !== 'All'
 
   return (
     <section className="shell" style={{ padding: '40px 0 64px' }}>
@@ -34,9 +45,7 @@ export default function EventsPage() {
         </p>
       </div>
 
-      <div
-        style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}
-      >
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
         <input
           type="search"
           placeholder="Search events by name…"
@@ -70,17 +79,41 @@ export default function EventsPage() {
         </select>
       </div>
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-          gap: 16,
-        }}
-      >
-        {events.map((event) => (
-          <EventCard key={event.id} event={event} />
-        ))}
-      </div>
+      {results.length === 0 ? (
+        <EmptyState
+          title="No events match that search"
+          description={
+            hasActiveFilters
+              ? 'Try a different name or switch back to all categories.'
+              : 'Check back soon — nothing upcoming has been posted yet.'
+          }
+          action={
+            hasActiveFilters ? (
+              <button
+                className="btn btn-secondary"
+                onClick={() => {
+                  setQuery('')
+                  setCategory('All')
+                }}
+              >
+                Clear filters
+              </button>
+            ) : undefined
+          }
+        />
+      ) : (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+            gap: 16,
+          }}
+        >
+          {results.map((event) => (
+            <EventCard key={event.id} event={event} />
+          ))}
+        </div>
+      )}
     </section>
   )
 }

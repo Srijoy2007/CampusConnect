@@ -235,34 +235,38 @@ export function getEventById(id: string): CampusEvent | undefined {
   return events.find((event) => event.id === id)
 }
 
+/** Generates a fresh, collision-free event id for newly created events. */
+export function generateEventId(): string {
+  let n = events.length + 1
+  while (events.some((e) => e.id === `evt-${String(n).padStart(2, '0')}`)) {
+    n += 1
+  }
+  return `evt-${String(n).padStart(2, '0')}`
+}
+
 /**
- * PARTICIPANT TASK (Task 1 — Event Listing):
- *
- * This is a stub. Right now it ignores `query` completely and just
- * returns every event, which is why `tests/search.test.ts` is failing.
- *
- * You need to make this do a case-insensitive, partial match on
- * `event.name` — e.g. "hack" should match "Hack the Campus 2026".
+ * Case-insensitive, partial match on event.name.
+ * e.g. "hack" matches "Hack the Campus 2026".
  */
 export function searchEventsByName(
   eventList: CampusEvent[],
   query: string,
 ): CampusEvent[] {
-  // TODO(participant): implement case-insensitive partial name search.
-  return eventList
+  const trimmed = query.trim().toLowerCase()
+  if (!trimmed) return eventList
+  return eventList.filter((event) =>
+    event.name.toLowerCase().includes(trimmed),
+  )
 }
 
 /**
- * PARTICIPANT TASK (Task 1 — Event Listing):
- *
- * This is a stub. Right now it ignores `category` and returns every
- * event unchanged. You need to filter by exact category match, and
- * make sure it composes with searchEventsByName above.
+ * Exact category match. 'All' returns the list unchanged, so this
+ * composes cleanly with searchEventsByName above.
  */
 export function filterEventsByCategory(
   eventList: CampusEvent[],
   category: EventCategory | 'All',
 ): CampusEvent[] {
-  // TODO(participant): implement category filtering.
-  return eventList
+  if (category === 'All') return eventList
+  return eventList.filter((event) => event.category === category)
 }
