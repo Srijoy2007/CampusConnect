@@ -12,11 +12,11 @@ export interface Registration {
   registeredAt: string // ISO date string
 }
 
-// NOTE FOR PARTICIPANTS: this array is the "database" of registrations.
-// Task 2 (Registration) means pushing new items into this array when a
-// student registers. Task 3 (Cancellation) means updating an item's
-// status here. Keep using this same array — don't create a second store.
-export const registrations: Registration[] = [
+declare global {
+  var __ccRegistrations: Registration[] | undefined
+}
+
+const SEED_REGISTRATIONS: Registration[] = [
   {
     id: 'reg-01',
     eventId: 'evt-01',
@@ -39,6 +39,9 @@ export const registrations: Registration[] = [
     registeredAt: '2026-09-12T18:40:00',
   },
 ]
+
+export const registrations: Registration[] =
+  globalThis.__ccRegistrations ?? (globalThis.__ccRegistrations = SEED_REGISTRATIONS)
 
 /** Simple lookup used by the placeholder "My Registrations" page. */
 export function getRegistrationsForStudent(studentId: string): Registration[] {

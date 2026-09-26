@@ -22,7 +22,11 @@ export interface CampusEvent {
 // "Today" for the seed data. Events before this are considered past.
 export const TODAY = new Date('2026-09-16T09:00:00')
 
-export const events: CampusEvent[] = [
+declare global {
+  var __ccEvents: CampusEvent[] | undefined
+}
+
+const SEED_EVENTS: CampusEvent[] = [
   {
     id: 'evt-01',
     name: 'Hack the Campus 2026',
@@ -219,6 +223,9 @@ export const events: CampusEvent[] = [
     cancelled: false,
   },
 ]
+
+export const events: CampusEvent[] =
+  globalThis.__ccEvents ?? (globalThis.__ccEvents = SEED_EVENTS)
 
 /** True when the event's date has already passed relative to TODAY. */
 export function isPastEvent(event: CampusEvent): boolean {

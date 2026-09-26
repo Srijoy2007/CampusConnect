@@ -53,3 +53,24 @@ export async function registerForEvent(
   revalidateEverything(eventId)
   return { ok: true }
 }
+export async function cancelRegistration(
+  registrationId: string,
+  studentId: string,
+): Promise<ActionResult> {
+  const reg = registrations.find((r) => r.id === registrationId)
+  if (!reg) return { ok: false, error: 'Registration not found.' }
+  if (reg.studentId !== studentId) {
+    return { ok: false, error: "You can't cancel someone else's registration." }
+  }
+  if (reg.status === 'cancelled') return { ok: true }
+
+  reg.status = 'cancelled'
+  const event = getEventById(reg.eventId)
+  // clamp so seats can never exceed capacity, even on a double-cancel
+  if (event) {
+    event.seatsAvailable = Math.min(event.capacity, event.seatsAvailable + 1)
+  }
+
+  revalidateEverything(reg.eventId)
+  return { ok: true }
+}
