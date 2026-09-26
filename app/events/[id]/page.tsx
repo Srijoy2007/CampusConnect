@@ -1,10 +1,10 @@
+'use client'
+
 import Link from 'next/link'
+import { useAuth } from '@/components/AuthProvider'
 import { getEventById, isPastEvent, isFullEvent } from '@/data/events'
-import { getConfirmedRegistrationsForEvent } from '@/data/registrations'
 import StatusBadge from '@/components/StatusBadge'
 import EmptyState from '@/components/EmptyState'
-import RegisterPanel from '@/components/RegisterPanel'
-
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-IN', {
@@ -27,9 +27,13 @@ export default function EventDetailPage({
 }: {
   params: { id: string }
 }) {
+  const { currentUser } = useAuth()
   const event = getEventById(params.id)
 
-  if (!event) {
+  const hiddenFromStudent =
+    event?.cancelled && currentUser.role !== 'organizer'
+
+  if (!event || hiddenFromStudent) {
     return (
       <section className="shell" style={{ padding: '56px 0' }}>
         <EmptyState
@@ -54,9 +58,8 @@ export default function EventDetailPage({
       : full
         ? 'full'
         : 'open'
-    const confirmedStudentIds = getConfirmedRegistrationsForEvent(event.id).map(
-        (reg) => reg.studentId,
-    )
+  const canRegister = !past && !full && !event.cancelled
+
   return (
     <section className="shell" style={{ padding: '40px 0 64px' }}>
       <Link
@@ -105,14 +108,18 @@ export default function EventDetailPage({
               POST /api/registrations route, and make sure it respects
               login state, duplicate registrations, full events, and
               past/cancelled events. */}
-                
-            <RegisterPanel
-             eventId={event.id}
-             past={past}
-             full={full}
-             cancelled={event.cancelled}
-             confirmedStudentIds={confirmedStudentIds}
-            />
+          <button
+            className="btn btn-primary"
+            disabled={!canRegister}
+            style={{ marginTop: 4 }}
+            title="Registration isn't wired up yet — that's Task 2"
+          >
+            {canRegister
+              ? 'Register'
+              : status === 'full'
+                ? 'Event full'
+                : 'Registration closed'}
+          </button>
         </aside>
       </div>
     </section>

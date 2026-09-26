@@ -277,3 +277,69 @@ export function filterEventsByCategory(
   if (category === 'All') return eventList
   return eventList.filter((event) => event.category === category)
 }
+
+export interface CreateEventInput{
+    name:string
+    description: string
+    date: string 
+    venue: string 
+    category: EventCategory
+    capacity: number 
+    organizerId: string 
+}
+
+export function validateEventInput(input: {
+    name:string
+    date:string
+    venue:string
+    capacity:number
+}):string | null {
+    if(!input.name.trim()) return "Event name is required."
+    if(!input.venue.trim()) return 'Venue is required'
+    if(!input.date || isNaN(new Date(input.date).getTime())){
+        return "A valid date is required"
+    }
+    if(new Date(input.date).getTime() <= TODAY.getTime()){
+        return "Event date must be in the future."
+    }
+    if(!Number.isFinite(input.capacity) || input.capacity <= 0) {
+        return 'Capacity must be a positive number'
+    }
+    return null 
+}
+
+export function createEvent(input: CreateEventInput): CampusEvent {
+  const newEvent: CampusEvent = {
+    id: `evt-${Math.random().toString(36).slice(2, 9)}`,
+    name: input.name,
+    description: input.description,
+    date: input.date,
+    venue: input.venue,
+    category: input.category,
+    capacity: input.capacity,
+    seatsAvailable: input.capacity,
+    organizerId: input.organizerId,
+    cancelled: false,
+  }
+  events.push(newEvent)
+  return newEvent
+}
+
+/** PARTICIPANT TASK (Task 4): updates an existing event in place. */
+export function updateEvent(
+  id: string,
+  updates: Partial<Omit<CampusEvent, 'id' | 'organizerId'>>,
+): boolean {
+  const event = events.find((e) => e.id === id)
+  if (!event) return false
+  Object.assign(event, updates)
+  return true
+}
+
+/** PARTICIPANT TASK (Task 4): cancels an event (soft-delete). */
+export function cancelEvent(id: string): boolean {
+  const event = events.find((e) => e.id === id)
+  if (!event) return false
+  event.cancelled = true
+  return true
+}

@@ -74,3 +74,46 @@ export async function cancelRegistration(
   revalidateEverything(reg.eventId)
   return { ok: true }
 }
+
+import {
+  createEvent as createEventInStore,
+  updateEvent as updateEventInStore,
+  cancelEvent as cancelEventInStore,
+  validateEventInput,
+  CreateEventInput,
+  CampusEvent,
+} from '@/data/events'
+
+export async function createEventAction(
+  input: CreateEventInput,
+): Promise<ActionResult> {
+  const error = validateEventInput(input)
+  if (error) return { ok: false, error }
+  createEventInStore(input)
+  revalidateEverything()
+  return { ok: true }
+}
+
+export async function updateEventAction(
+  id: string,
+  updates: Partial<Omit<CampusEvent, 'id' | 'organizerId'>>,
+): Promise<ActionResult> {
+  const error = validateEventInput({
+    name: updates.name ?? '',
+    date: updates.date ?? '',
+    venue: updates.venue ?? '',
+    capacity: updates.capacity ?? 0,
+  })
+  if (error) return { ok: false, error }
+  const ok = updateEventInStore(id, updates)
+  if (!ok) return { ok: false, error: 'Event not found.' }
+  revalidateEverything(id)
+  return { ok: true }
+}
+
+export async function cancelEventAction(id: string): Promise<ActionResult> {
+  const ok = cancelEventInStore(id)
+  if (!ok) return { ok: false, error: 'Event not found.' }
+  revalidateEverything(id)
+  return { ok: true }
+}
